@@ -1,0 +1,193 @@
+:root{
+  --bg:#0f1115;
+  --fg:#e6e8ee;
+  --muted:#9aa3b2;
+  --green:#32d74b;
+  --red:#ff453a;
+  --grid:#2a2f3a;
+  --line:#4b5362;
+}
+
+*{ box-sizing: border-box; }
+body{
+  margin:0;
+  font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--fg);
+  background:var(--bg);
+}
+.wrap{ max-width:1280px; margin:0 auto; padding:16px; }
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:12px;
+}
+.topbar h1{ font-size:18px; margin:0; color:var(--fg); }
+.controls{ 
+  display:flex; 
+  align-items:center; 
+  gap:8px; 
+  flex-wrap: wrap;
+  font-size: 14px;
+  padding: 8px;
+  background: #1a1d29;
+  border-bottom: 1px solid #2a2f3a;
+  margin-bottom: 12px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .controls {
+    gap: 6px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 900px) {
+  .controls {
+    gap: 4px;
+    font-size: 12px;
+  }
+}
+
+.btn{
+  background:#1a1f29; color:var(--fg);
+  border:1px solid #2b3240; padding:8px 12px; border-radius:10px;
+  cursor:pointer;
+}
+.btn:hover{ border-color:#3a4356; }
+
+.working-days{ color:var(--muted); display:flex; align-items:center; gap:8px; }
+.zoom{ color:var(--muted); display:flex; align-items:center; gap:8px; }
+.settings{ color:var(--muted); display:flex; align-items:center; gap:8px; }
+.saved-days{ color:var(--muted); display:flex; align-items:center; gap:8px; }
+#zoomRange{ width:240px; }
+
+.simulated-time-panel{
+  background: #1a1f29;
+  border: 1px solid #2b3240;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+}
+
+.time-controls{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+}
+
+.time-controls label{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Icone bianche per input date e time */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* Rende le icone bianche */
+  cursor: pointer;
+}
+
+/* Per Firefox */
+input[type="date"],
+input[type="time"] {
+  color-scheme: dark; /* Usa il tema scuro per le icone */
+}
+
+.button-area{ display:flex; align-items:center; gap:16px; margin:12px 0; }
+.circle{
+  width:64px; height:64px; border-radius:50%;
+  border:none; cursor:pointer; position:relative;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.05) inset, 0 10px 25px rgba(0,0,0,0.4);
+}
+.circle.green{ background: radial-gradient( circle at 30% 30%, #6cff8a, var(--green)); }
+.circle.red{
+  background: radial-gradient( circle at 30% 30%, #ff8f89, var(--red));
+  animation: blink 0.8s linear infinite;
+}
+@keyframes blink{
+  0%,100%{ filter:brightness(1.0); }
+  50%{ filter:brightness(0.6); }
+}
+
+.legend{ color:var(--muted); }
+.dot{
+  display:inline-block; width:10px; height:10px; border-radius:50%;
+  vertical-align:middle; margin-right:6px;
+}
+.dot.green{ background:var(--green); }
+.dot.red{ background:var(--red); }
+
+.timeline-container{
+  display: flex;
+  position: relative;
+  border: 1px solid #273043;
+  border-radius: 12px;
+  background: #10131a;
+  overflow: hidden;
+}
+
+.timeline-wrapper{
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+#timelineCanvas{
+  width: 100%;
+  max-width: 100%;
+  display: block;
+  transition: transform 0.1s ease-out;
+}
+
+.vertical-scrollbar{
+  width: 12px;
+  background: #1a1f29;
+  border-left: 1px solid #2b3240;
+  position: relative;
+  cursor: pointer;
+}
+
+.scrollbar-thumb{
+  background: #4b5362;
+  border-radius: 6px;
+  position: absolute;
+  width: 10px;
+  left: 1px;
+  transition: background 0.2s ease;
+}
+
+.scrollbar-thumb:hover{
+  background: #6b7280;
+}
+
+.scrollbar-thumb:active{
+  background: #9aa3b2;
+}
+
+.day-remove-btn{
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  background: #ff453a;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.day-remove-btn:hover{
+  opacity: 1;
+}
+
+.ruler-help{ color:var(--muted); margin-top:8px; }

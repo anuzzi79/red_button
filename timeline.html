@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>red_button — Timeline</title>
+    <link rel="stylesheet" href="timeline.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="topbar">
+        <h1>red_button</h1>
+        <div class="controls">
+          <button id="playBtn" class="btn">Play</button>
+          <button id="stopBtn" class="btn">Stop</button>
+          <label class="working-days">
+            Working Days
+            <select id="workingDaysSelect" style="background: #1a1f29; color: #e6e8ee; border: 1px solid #2b3240; border-radius: 6px; padding: 4px 8px; margin-left: 8px;">
+              <option value="1">Current Day</option>
+              <option value="2">Dia anterior</option>
+              <option value="4">3 dias anteriores</option>
+              <option value="8">Sete dias anteriores</option>
+              <option value="15">14 dias anteriores</option>
+              <option value="31">30 dias anteriores</option>
+              <option value="custom">XX dias anteriores</option>
+            </select>
+          </label>
+          <label class="zoom">
+            Zoom
+            <!-- minimo aggiornato a 0.01 -->
+            <input id="zoomRange" type="range" min="0.01" max="3" value="1" step="0.01" />
+            <input id="zoomValue" type="number" min="0.01" max="3" step="0.01" value="1" style="width: 80px; margin: 0 4px; background: #1a1f29; color: #e6e8ee; border: 1px solid #2b3240; border-radius: 6px; padding: 4px 8px;" />
+            <span id="zoomLabel">px/s</span>
+          </label>
+          <label class="settings">
+            Settings
+            <select id="timeModeSelect" style="background: #1a1f29; color: #e6e8ee; border: 1px solid #2b3240; border-radius: 6px; padding: 4px 8px; margin-left: 8px;">
+              <option value="real">Tempo Real</option>
+              <option value="simulated">Tempo Simulado</option>
+            </select>
+          </label>
+          <button id="saveDayBtn" class="btn" style="margin-left: 16px; background: #2d7a3e;">Salvar Dia</button>
+          <label class="saved-days">
+            Dias Salvos
+            <select id="savedDaysSelect" style="background: #1a1f29; color: #e6e8ee; border: 1px solid #2b3240; border-radius: 6px; padding: 4px 8px; margin-left: 8px;">
+              <option value="">Nenhum</option>
+            </select>
+            <button id="loadSavedBtn" class="btn" style="margin-left: 8px;">Carregar</button>
+          </label>
+        </div>
+      </header>
+
+      <main>
+        <div class="button-area">
+          <button id="redBtn" class="circle green" title="Click sinistro: toggle rosso/verde"></button>
+          <div class="legend">
+            <span class="dot green"></span> Verde = inattivo &nbsp;&nbsp;
+            <span class="dot red"></span> Rosso = attivo (timeline rossa)
+          </div>
+        </div>
+
+        <div id="simulatedTimeControls" class="simulated-time-panel" style="display: none;">
+          <div class="time-controls">
+            <label>
+              Data:
+              <input id="simulatedDateInput" type="date" style="background: #1a1f29; color: #e6e8ee; border: 1px solid #2b3240; border-radius: 6px; padding: 4px 8px; margin: 0 4px;" />
+            </label>
+            <label>
+              Hora:
+              <input id="simulatedTimeInput" type="time" style="background: #1a1f29; color: #e6e8ee; border: 1px solid #2b3240; border-radius: 6px; padding: 4px 8px; margin: 0 4px;" />
+            </label>
+            <button id="applySimulatedBtn" class="btn" style="margin-left: 8px;">Aplicar</button>
+          </div>
+        </div>
+
+        <div class="timeline-container">
+          <div id="timelineWrapper" class="timeline-wrapper">
+            <canvas id="timelineCanvas" width="1200" height="220"></canvas>
+          </div>
+          <div id="verticalScrollbar" class="vertical-scrollbar" style="display: none;">
+            <div id="scrollbarThumb" class="scrollbar-thumb"></div>
+          </div>
+        </div>
+        
+        <div class="ruler-help">Scala: pixel per secondo. Con zoom alto vedi i decimi di secondo; con zoom basso l'avanzamento diventa impercettibile.</div>
+      </main>
+    </div>
+
+    <script src="ruler.js"></script>
+  <script src="timeline.js"></script>
+  </body>
+</html>

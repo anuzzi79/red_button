@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "red_button",
+  "description": "Bottone rosso lampeggiante con timeline decisecond e zoom. Play/Stop/Reopen dal menu tasto destro.",
+  "version": "1.0.0",
+  "action": {
+    "default_title": "red_button — Apri/Mostra Timeline",
+    "default_icon": {
+      "16": "icon.svg",
+      "32": "icon.svg", 
+      "48": "icon.svg",
+      "128": "icon.svg"
+    }
+  },
+  "background": {
+    "service_worker": "service_worker.js",
+    "type": "module"
+  },
+  "permissions": [
+    "offscreen",
+    "storage",
+    "contextMenus",
+    "tabs"
+  ],
+  "host_permissions": []
+}
