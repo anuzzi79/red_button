@@ -30,16 +30,13 @@ class RulerRenderer {
     return new Date();
   }
   
-  // Calcola la posizione X del tempo corrente (scorre da destra verso sinistra)
+  // Calcola la posizione X del tempo corrente (FISSO a destra)
   calculateCurrentTimeX(canvasWidth, rightPad) {
     if (!this.uiState || !this.uiState.sessionStartTime) return canvasWidth - rightPad;
     
-    const currentTime = this.getCurrentTime();
-    const sessionStartTime = new Date(this.uiState.sessionStartTime);
-    const timeFromSessionStart = (currentTime.getTime() - sessionStartTime.getTime()) / 1000;
-    
-    // Il tempo corrente è sempre a destra, poi scorre verso sinistra
-    return (canvasWidth - rightPad) - timeFromSessionStart * this.PPS + this.horizontalOffset;
+    // Il segna presente rosso rimane sempre FISSO a destra
+    // Solo il contenuto temporale (taccature + ruler) scorre verso sinistra
+    return canvasWidth - rightPad + this.horizontalOffset;
   }
   
   // Metodo di compatibilità per il sistema di tracciamento esistente
@@ -187,6 +184,7 @@ class RulerRenderer {
     for (let timestamp = firstTick; timestamp <= endTimestamp; timestamp += granularity.interval) {
       const tickTime = new Date(timestamp * 1000);
       const timeDiff = (timestamp * 1000 - currentTime.getTime()) / 1000;
+      // Le taccature si muovono verso sinistra rispetto al segna presente fisso
       const x = currentTimeX + timeDiff * this.PPS;
       
       // Solo se è visibile
