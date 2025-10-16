@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Extension</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .error {
+            color: #ff6b6b;
+        }
+        .success {
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Extension - Red Button</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Apertura Timeline</h2>
+        <button onclick="openTimeline()">Apri Timeline</button>
+        <div id="timeline-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Service Worker</h2>
+        <button onclick="testServiceWorker()">Test Service Worker</button>
+        <div id="service-worker-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test Offscreen</h2>
+        <button onclick="testOffscreen()">Test Offscreen</button>
+        <div id="offscreen-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Test Play</h2>
+        <button onclick="testPlay()">Test Play</button>
+        <div id="play-result"></div>
+    </div>
+
+    <script>
+        function log(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            const className = isError ? 'error' : 'success';
+            element.innerHTML = `<span class="${className}">${message}</span>`;
+        }
+
+        async function openTimeline() {
+            try {
+                const timelineUrl = chrome.runtime.getURL('timeline.html');
+                await chrome.tabs.create({ url: timelineUrl });
+                log('timeline-result', '✅ Timeline aperta con successo!');
+            } catch (error) {
+                log('timeline-result', `❌ Errore: ${error.message}`, true);
+            }
+        }
+
+        async function testServiceWorker() {
+            try {
+                const response = await chrome.runtime.sendMessage({ 
+                    target: 'service_worker', 
+                    type: 'request_state' 
+                });
+                log('service-worker-result', '✅ Service Worker risponde!');
+            } catch (error) {
+                log('service-worker-result', `❌ Errore Service Worker: ${error.message}`, true);
+            }
+        }
+
+        async function testOffscreen() {
+            try {
+                const response = await chrome.runtime.sendMessage({ 
+                    target: 'offscreen', 
+                    type: 'get_state' 
+                });
+                log('offscreen-result', '✅ Offscreen risponde!');
+            } catch (error) {
+                log('offscreen-result', `❌ Errore Offscreen: ${error.message}`, true);
+            }
+        }
+
+        async function testPlay() {
+            try {
+                const response = await chrome.runtime.sendMessage({ 
+                    target: 'offscreen', 
+                    type: 'play' 
+                });
+                log('play-result', '✅ Play inviato con successo!');
+            } catch (error) {
+                log('play-result', `❌ Errore Play: ${error.message}`, true);
+            }
+        }
+
+        // Test automatico all'avvio
+        window.addEventListener('load', () => {
+            console.log('🎯 Test page loaded');
+            testServiceWorker();
+        });
+    </script>
+</body>
+</html>

@@ -165,7 +165,10 @@ function render() {
   // Disegna segmenti di tracciamento - solo sul primo giorno
   const currentDayY = 0;
   const rightPad = 40;
-  const zeroX = rulerRenderer.calculateCurrentTimeX(w, rightPad);
+  const zeroX = rulerRenderer.calculateZeroX(w, rightPad, PPS, horizontalOffset);
+  
+  // Log di rendering solo per debug occasionale
+  // console.log('🎯 Rendering segments:', uiState.segments.length, 'redPeriods:', uiState.redPeriods.length, 'sessionPeriods:', uiState.sessionPeriods.length);
   
   for (const seg of uiState.segments) {
     const currentTime = getCurrentTime();
@@ -178,6 +181,9 @@ function render() {
     const segEndTime = new Date(uiState.sessionStartTime + segEndMs);
     const timeDiffEnd = (segEndTime.getTime() - currentTime.getTime()) / 1000;
     const x2 = zeroX + timeDiffEnd * PPS;
+    
+    console.log('🎯 Segment:', { x1, x2, active: uiState.active, elapsedMs: uiState.elapsedMs });
+    
     if (x2 < 0 || x1 > w) continue;
 
     ctx.fillStyle = uiState.active ? '#dc2626' : '#16a34a';
@@ -293,23 +299,41 @@ function updateScrollbar() {
 function initEventListeners() {
   // Sistema bandierine rimosso
 
-  // Bottoni Play/Stop
+  // Bottoni Play/Stop - ora gestiti dal bottone verde grande
   if (playBtn) {
     playBtn.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ target: 'offscreen', type: 'play' });
+      console.log('🎯 Play button clicked - Starting tracking');
+      sendDebugLog('play', '🎯 Play button clicked - Starting tracking');
+      ensureOffscreenAndPlay();
     });
   }
 
   if (stopBtn) {
     stopBtn.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ target: 'offscreen', type: 'stop' });
+      sendDebugLog('stop', '🛑 Stop button clicked - Resetting to normal');
+      chrome.runtime.sendMessage({ target: 'offscreen', type: 'stop' }, (response) => {
+        sendDebugLog('stop', '✅ Stop response', response);
+      });
     });
   }
 
-  // Bottone rosso
+  // Bottone rosso/verde - ora gestisce il tracciamento principale
   if (redBtn) {
     redBtn.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ target: 'offscreen', type: 'toggleActive' });
+      console.log('🎯 Red/Green button clicked - Toggle tracking');
+      sendDebugLog('play', '🎯 Red/Green button clicked - Toggle tracking');
+      
+      // Assicurati che l'offscreen sia attivo prima di inviare il messaggio
+      ensureOffscreenAndPlay();
+    });
+  }
+
+  // Bottone di test
+  const testBtn = document.getElementById('testBtn');
+  if (testBtn) {
+    testBtn.addEventListener('click', () => {
+      console.log('🎯 Test button clicked');
+      alert('Test button works! Extension is loaded.');
     });
   }
 
@@ -470,10 +494,68 @@ function initCanvasEventListeners() {
   });
 }
 
+// ===== GESTIONE ASPETTO BOTTONE =====
+
+function updateButtonAppearance() {
+  if (!redBtn || !uiState) return;
+  
+  // Rimuovi tutte le classi di colore
+  redBtn.classList.remove('green', 'red', 'blinking');
+  
+  if (!uiState.running) {
+    // Non in esecuzione - bottone grigio
+    redBtn.classList.add('green');
+    redBtn.title = 'Click per avviare il tracciamento';
+  } else if (uiState.active) {
+    // In esecuzione e attivo - bottone rosso lampeggiante
+    redBtn.classList.add('red', 'blinking');
+    redBtn.title = 'Click per passare a verde';
+  } else {
+    // In esecuzione ma non attivo - bottone verde
+    redBtn.classList.add('green');
+    redBtn.title = 'Click per passare a rosso';
+  }
+}
+
 // ===== COMUNICAZIONE CON OFFScreen =====
 
+async function ensureOffscreenAndPlay() {
+  try {
+    // Prima assicurati che l'offscreen sia attivo
+    await chrome.runtime.sendMessage({ target: 'service_worker', type: 'request_state' });
+    
+    // Poi invia il comando play
+    chrome.runtime.sendMessage({ target: 'offscreen', type: 'play' }, (response) => {
+      console.log('🎯 Play response:', response);
+      sendDebugLog('play', '✅ Tracking response', response);
+    });
+  } catch (error) {
+    console.error('🎯 Error ensuring offscreen:', error);
+    sendDebugLog('error', '❌ Error starting tracking', error);
+  }
+}
+
+function sendDebugLog(level, message, data = null) {
+  console.log('Sending debug log:', { level, message, data });
+  chrome.runtime.sendMessage({
+    type: 'debug-log',
+    level: level,
+    message: message,
+    data: data
+  }).then(() => {
+    console.log('Debug log sent successfully');
+  }).catch((error) => {
+    console.log('Debug log send failed:', error);
+  });
+}
+
 function requestState() {
-  chrome.runtime.sendMessage({ target: 'offscreen', type: 'getState' });
+  console.log('🎯 Requesting state from offscreen...');
+  sendDebugLog('debug', '📡 Richiesta stato...');
+  chrome.runtime.sendMessage({ target: 'offscreen', type: 'getState' }, (response) => {
+    console.log('🎯 State response:', response);
+    sendDebugLog('state', '📊 Stato ricevuto', response);
+  });
 }
 
 // Ricezione aggiornamenti dall'offscreen
@@ -481,7 +563,22 @@ chrome.runtime.onMessage.addListener((msg) => {
   if (msg?.target !== 'timeline') return;
 
   if (msg.type === 'state' || msg.type === 'tick') {
+    // Solo log per cambiamenti di stato importanti, non per ogni tick
+    if (msg.type === 'state' || (msg.type === 'tick' && (msg.payload?.running !== uiState?.running || msg.payload?.active !== uiState?.active))) {
+      console.log('🎯 State change:', msg.type, { 
+        running: msg.payload?.running, 
+        active: msg.payload?.active, 
+        segments: msg.payload?.segments?.length || 0 
+      });
+      sendDebugLog('state', `📨 ${msg.type} update`, { 
+        running: msg.payload?.running, 
+        active: msg.payload?.active, 
+        segments: msg.payload?.segments?.length || 0,
+        sessionPeriods: msg.payload?.sessionPeriods?.length || 0
+      });
+    }
     uiState = msg.payload;
+    updateButtonAppearance();
     render();
   }
 });
@@ -540,11 +637,17 @@ function initDOM() {
     console.log('🔧 Auto-inizializzato sessionStartTime:', new Date(uiState.sessionStartTime).toLocaleTimeString());
   }
 
+  // Assicurati che l'offscreen sia attivo
+  chrome.runtime.sendMessage({ target: 'service_worker', type: 'request_state' });
+
   // Prima richiesta di stato
   requestState();
 
   // Inizializza event listeners
   initEventListeners();
+  
+  // Aggiorna aspetto iniziale del bottone
+  updateButtonAppearance();
   initCanvasEventListeners();
 
   // Inizializza il menu Working Days
@@ -562,6 +665,11 @@ function initDOM() {
   render();
 
   console.log('✅ Red Button Timeline - Script inizializzato completamente!');
+  
+  // Test debug log
+  setTimeout(() => {
+    sendDebugLog('debug', '🎯 Timeline inizializzato e pronto');
+  }, 500);
 }
 
 // Inizializza quando il DOM è pronto

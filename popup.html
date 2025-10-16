@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Red Button - Debug Console</title>
+  <style>
+    body {
+      width: 400px;
+      height: 500px;
+      margin: 0;
+      padding: 10px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      font-size: 12px;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #333;
+    }
+    
+    .title {
+      font-weight: bold;
+      color: #ff453a;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 5px;
+    }
+    
+    button {
+      padding: 4px 8px;
+      background: #333;
+      color: #e0e0e0;
+      border: 1px solid #555;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    
+    button:hover {
+      background: #444;
+    }
+    
+    .console {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 3px;
+      height: 400px;
+      overflow-y: auto;
+      padding: 8px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    
+    .log-entry {
+      margin-bottom: 2px;
+      word-wrap: break-word;
+    }
+    
+    .log-timestamp {
+      color: #666;
+      margin-right: 8px;
+    }
+    
+    .log-play {
+      color: #4CAF50;
+    }
+    
+    .log-stop {
+      color: #f44336;
+    }
+    
+    .log-red {
+      color: #ff9800;
+    }
+    
+    .log-state {
+      color: #2196F3;
+    }
+    
+    .log-error {
+      color: #f44336;
+      font-weight: bold;
+    }
+    
+    .log-debug {
+      color: #9C27B0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">🔴 Red Button Debug</div>
+    <div class="controls">
+      <button id="clearBtn">Clear</button>
+      <button id="testBtn">Test Play</button>
+    </div>
+  </div>
+  
+  <div id="console" class="console"></div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

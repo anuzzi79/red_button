@@ -3,6 +3,8 @@
 // - Mantiene/coordina il documento offscreen che gestisce il timer
 // - Apre/riapre la tab della timeline
 
+console.log('🎯 Service Worker loaded');
+
 const OFFSCREEN_URL = chrome.runtime.getURL('offscreen.html');
 const TIMELINE_URL  = chrome.runtime.getURL('timeline.html');
 
@@ -28,15 +30,28 @@ async function sendToOffscreen(message) {
 }
 
 async function openOrFocusTimeline() {
-  // Cerca tab già aperta con la timeline
-  const tabs = await chrome.tabs.query({});
-  const existing = tabs.find(t => t.url === TIMELINE_URL);
-  if (existing) {
-    await chrome.tabs.update(existing.id, { active: true });
-    return;
+  console.log('🎯 Opening timeline...');
+  try {
+    // Cerca tab già aperta con la timeline
+    const tabs = await chrome.tabs.query({});
+    const existing = tabs.find(t => t.url === TIMELINE_URL);
+    if (existing) {
+      console.log('🎯 Timeline tab found, focusing...');
+      await chrome.tabs.update(existing.id, { active: true });
+      return;
+    }
+    // Altrimenti apri una nuova tab
+    console.log('🎯 Creating new timeline tab...');
+    await chrome.tabs.create({ url: TIMELINE_URL });
+  } catch (error) {
+    console.error('🎯 Error in openOrFocusTimeline:', error);
+    // Fallback: prova ad aprire direttamente
+    try {
+      await chrome.tabs.create({ url: TIMELINE_URL });
+    } catch (fallbackError) {
+      console.error('🎯 Fallback also failed:', fallbackError);
+    }
   }
-  // Altrimenti apri una nuova tab
-  await chrome.tabs.create({ url: TIMELINE_URL });
 }
 
 // Context menus su icona dell’estensione
@@ -59,18 +74,21 @@ chrome.runtime.onInstalled.addListener(async () => {
   });
   chrome.contextMenus.create({
     id: 'show_logs',
-    title: 'Mostra Log (debug annotazioni)',
+    title: 'Red Button Debug',
     contexts: ['action']
   });
 });
 
 chrome.contextMenus.onClicked.addListener(async (info) => {
   if (info.menuItemId === 'play') {
+    await ensureOffscreen();
     await sendToOffscreen({ type: 'play' });
     await openOrFocusTimeline();
   } else if (info.menuItemId === 'stop') {
+    await ensureOffscreen();
     await sendToOffscreen({ type: 'stop' });
   } else if (info.menuItemId === 'reopen') {
+    await ensureOffscreen();
     await openOrFocusTimeline();
   } else if (info.menuItemId === 'show_logs') {
     await showDebugLogs();
@@ -127,7 +145,15 @@ async function showDebugLogs() {
 
 // Click sull'icona: apre/porta in primo piano la timeline
 chrome.action.onClicked.addListener(async () => {
-  await openOrFocusTimeline();
+  console.log('🎯 Icon clicked - Opening timeline');
+  try {
+    await ensureOffscreen();
+    console.log('🎯 Offscreen ensured');
+    await openOrFocusTimeline();
+    console.log('🎯 Timeline opened');
+  } catch (error) {
+    console.error('🎯 Error opening timeline:', error);
+  }
 });
 
 // Messaggistica da timeline

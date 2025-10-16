@@ -42,6 +42,11 @@ class RulerRenderer {
     return (canvasWidth - rightPad) - timeFromSessionStart * this.PPS + this.horizontalOffset;
   }
   
+  // Metodo di compatibilità per il sistema di tracciamento esistente
+  calculateZeroX(canvasWidth, rightPad, PPS, horizontalOffset) {
+    return this.calculateCurrentTimeX(canvasWidth, rightPad);
+  }
+  
   // Calcola la data di un giorno specifico
   getDayDate(dayOffset) {
     if (!this.uiState || !this.uiState.sessionStartTime) return null;
@@ -260,17 +265,28 @@ class RulerRenderer {
     this.ctx.lineTo(x, dayY + lineHeight);
     this.ctx.stroke();
     
-    // Disegna l'etichetta
+    // Disegna l'etichetta (bandierina inversa)
     if (showLabel) {
+      // Posiziona l'etichetta più in basso e leggermente a sinistra della linea
+      const labelX = x - 8; // Sposta a sinistra della linea
+      const labelY = dayY + 40; // Sposta più in basso per evitare il taglio
+      
+      this.ctx.save();
+      this.ctx.translate(labelX, labelY);
+      this.ctx.rotate(-Math.PI / 2);
+      
+      // Sfondo semi-trasparente per migliorare la leggibilità
+      const textWidth = this.ctx.measureText(labelText).width;
+      this.ctx.fillStyle = 'rgba(16, 19, 26, 0.8)';
+      this.ctx.fillRect(-2, -textWidth - 2, textWidth + 4, textWidth + 4);
+      
+      // Testo dell'etichetta
       this.ctx.fillStyle = '#e6e8ee';
       this.ctx.font = '11px system-ui';
       this.ctx.textAlign = 'left';
       this.ctx.textBaseline = 'top';
+      this.ctx.fillText(labelText, 0, -1);
       
-      this.ctx.save();
-      this.ctx.translate(x, dayY + 20);
-      this.ctx.rotate(-Math.PI / 2);
-      this.ctx.fillText(labelText, 0, -3);
       this.ctx.restore();
     }
   }

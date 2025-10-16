@@ -78,21 +78,46 @@ function getPublicState() {
 
 function play() {
   if (!state.running) {
+    console.log('🎯 OFFScreen: Starting play with GREEN tracking');
     // Se è la prima volta che si avvia, salva il timestamp di inizio sessione
     if (state.sessionStartTime === null) {
       state.sessionStartTime = getCurrentTime().getTime();
     }
     state.running = true;
+    state.active = false; // Inizia con tracking verde
     // Salva quando inizia il tracking per questo periodo
     state.trackingStartTime = state.elapsedMs;
     // Inizia un nuovo periodo di sessione
     state.sessionPeriods.push({ startMs: state.elapsedMs, endMs: null });
+    console.log('🎯 OFFScreen: Session started with GREEN tracking, periods:', state.sessionPeriods.length);
+    chrome.runtime.sendMessage({ target: 'timeline', type: 'state', payload: getPublicState() }).catch(() => {});
+  } else {
+    // Se già in running, toggle tra verde e rosso
+    console.log('🎯 OFFScreen: Toggling color, current active:', state.active);
+    if (!state.active) {
+      // Passa da verde a rosso
+      console.log('🎯 OFFScreen: Switching to RED tracking');
+      state.active = true;
+      state.segments.push({ startMs: state.elapsedMs, endMs: null });
+      state.redPeriods.push({ startMs: state.elapsedMs, endMs: null });
+    } else {
+      // Passa da rosso a verde
+      console.log('🎯 OFFScreen: Switching to GREEN tracking');
+      state.active = false;
+      const last = state.segments[state.segments.length - 1];
+      if (last && last.endMs == null) last.endMs = state.elapsedMs;
+      
+      const lastRedPeriod = state.redPeriods[state.redPeriods.length - 1];
+      if (lastRedPeriod && lastRedPeriod.endMs == null) lastRedPeriod.endMs = state.elapsedMs;
+    }
+    console.log('🎯 OFFScreen: Color toggled, active:', state.active, 'segments:', state.segments.length);
     chrome.runtime.sendMessage({ target: 'timeline', type: 'state', payload: getPublicState() }).catch(() => {});
   }
 }
 
 function stop() {
   if (state.running) {
+    console.log('🎯 OFFScreen: Stopping and resetting to normal');
     state.running = false;
     // Chiudi eventuale segmento e periodo rosso aperti
     if (state.active) {
@@ -107,31 +132,42 @@ function stop() {
     if (lastSessionPeriod && lastSessionPeriod.endMs == null) {
       lastSessionPeriod.endMs = state.elapsedMs;
     }
+    // Reset dello stato attivo
+    state.active = false;
     // Reset del tracking start time
     state.trackingStartTime = null;
+    console.log('🎯 OFFScreen: Stopped, active:', state.active, 'running:', state.running);
     chrome.runtime.sendMessage({ target: 'timeline', type: 'state', payload: getPublicState() }).catch(() => {});
   }
 }
 
 function toggleActive() {
-  // Se timeline non è in play, accendiamo il play automaticamente
+  console.log('🎯 OFFScreen: toggleActive called, current active:', state.active);
+  
+  // Se timeline non è in play, accendiamo il play automaticamente (che ora inizia in rosso)
   if (!state.running) {
-    play(); // Questo inizializzerà sessionStartTime se necessario
+    console.log('🎯 OFFScreen: Auto-starting play with red');
+    play(); // Questo inizializzerà sessionStartTime se necessario e inizierà in rosso
+    return; // Play() già gestisce tutto
   }
 
   if (!state.active) {
     // accendi bottone rosso → apri nuovo segmento rosso e nuovo periodo rosso
+    console.log('🎯 OFFScreen: Activating red button');
     state.active = true;
     state.segments.push({ startMs: state.elapsedMs, endMs: null });
     state.redPeriods.push({ startMs: state.elapsedMs, endMs: null });
+    console.log('🎯 OFFScreen: Red active, segments:', state.segments.length, 'redPeriods:', state.redPeriods.length);
   } else {
     // spegni bottone rosso → chiudi segmento e periodo rosso
+    console.log('🎯 OFFScreen: Deactivating red button');
     state.active = false;
     const last = state.segments[state.segments.length - 1];
     if (last && last.endMs == null) last.endMs = state.elapsedMs;
     
     const lastRedPeriod = state.redPeriods[state.redPeriods.length - 1];
     if (lastRedPeriod && lastRedPeriod.endMs == null) lastRedPeriod.endMs = state.elapsedMs;
+    console.log('🎯 OFFScreen: Red deactivated, segments:', state.segments.length, 'redPeriods:', state.redPeriods.length);
   }
   chrome.runtime.sendMessage({ target: 'timeline', type: 'state', payload: getPublicState() }).catch(() => {});
 }
